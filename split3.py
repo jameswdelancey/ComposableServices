@@ -100,6 +100,7 @@ while True:
     line_count += 1
 
     if line_count == max_lines_per_file:
+        # No try here because let's fail hard if we can't copy.
         output_file.close()
         part_number += 1
         output_file_name = f"E:/new_file_storage/tmp/part{part_number:03}.tsv"

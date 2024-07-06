@@ -47,7 +47,7 @@ Command = List[str]
 CommandPipeline = List[Command]
 Service = List[CommandPipeline]
 
-running: bool = False
+running: bool = True
 
 
 def signal_handler(sig: int, frame: Optional[FrameType]) -> None:

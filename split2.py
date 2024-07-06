@@ -15,6 +15,7 @@ while True:
     line_count += 1
 
     if line_count == max_lines_per_file:
+        # No try here because if we fail to decode or change files or something let's halt
         output_file.close()
         part_number += 1
         output_file_name = f"E:/new_file_storage/data/part{part_number:03}.tsv"

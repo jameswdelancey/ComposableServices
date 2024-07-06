@@ -45,6 +45,9 @@ g_sizeacc = 0
 g_hOutFile = open(f"{g_strOutdirname}/{g_strOutbasename}", "ab")
 buffer = cast(SupportsReadInto, sys.stdin.buffer)
 while True:
+    # No Try here because we plan to fail hard if we cannot write a file or have some issue.
+    # This is meant to be restarted already for when the upstream ffmpeg binary or rtsp
+    # Issue happens. It will be restarted.
     size = buffer.readinto(g_cBuf)
     g_sizeacc += size
     if size == 0:
