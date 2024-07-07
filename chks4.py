@@ -5,6 +5,8 @@ import json
 import os
 import sys
 
+s = sys.argv[1]
+
 errors = {
     0: "Success.",
     1: "Repairable damage found.",
@@ -28,8 +30,8 @@ while True:
         break
     d = json.loads(line.decode("utf-8"))
     try:
-        base_path = d["s1_local_path"] + "/" + d["b_path"]
-        current_sha256_error = True if d["bs1_sha256_error"] != "0" else False
+        base_path = d["s"+s+"_local_path"] + "/" + d["b_path"]
+        current_sha256_error = True if d["bs"+s+"_sha256_error"] != "0" else False
         par2_path = base_path + ".par2"
         base_exists = True if os.path.exists(base_path) else False
         par2_exists = True if os.path.exists(par2_path) else False
@@ -47,16 +49,16 @@ while True:
                         file=sys.stderr,
                     )
                     # We tried to create but failed
-                    d["bs1_par2_exists"] = "0"
-                    d["bs1_par2_error"] = "1"
+                    d["bs"+s+"_par2_exists"] = "0"
+                    d["bs"+s+"_par2_error"] = "1"
                 else:
                     # We successfully created
-                    d["bs1_updated_at"] = dt.datetime.now().strftime(
+                    d["bs"+s+"_updated_at"] = dt.datetime.now().strftime(
                         "%Y-%m-%d %H:%M:%S"
                     )
-                    d["bs1_par2_exists"] = "1"
-                    d["bs1_par2_error"] = "0"
-                    d["bs1_par2_last_checked"] = dt.datetime.now().strftime(
+                    d["bs"+s+"_par2_exists"] = "1"
+                    d["bs"+s+"_par2_error"] = "0"
+                    d["bs"+s+"_par2_last_checked"] = dt.datetime.now().strftime(
                         "%Y-%m-%d %H:%M:%S"
                     )
             else:  # par2 exists, then validate
@@ -72,21 +74,21 @@ while True:
                         file=sys.stderr,
                     )
                     # We tried to validate but failed
-                    d["bs1_par2_exists"] = "1"
-                    d["bs1_par2_error"] = "1"
+                    d["bs"+s+"_par2_exists"] = "1"
+                    d["bs"+s+"_par2_error"] = "1"
                 else:
                     # We validated successfully
-                    d["bs1_updated_at"] = dt.datetime.now().strftime(
+                    d["bs"+s+"_updated_at"] = dt.datetime.now().strftime(
                         "%Y-%m-%d %H:%M:%S"
                     )
-                    d["bs1_par2_exists"] = "1"
-                    d["bs1_par2_error"] = "0"
-                    d["bs1_par2_last_checked"] = dt.datetime.now().strftime(
+                    d["bs"+s+"_par2_exists"] = "1"
+                    d["bs"+s+"_par2_error"] = "0"
+                    d["bs"+s+"_par2_last_checked"] = dt.datetime.now().strftime(
                         "%Y-%m-%d %H:%M:%S"
                     )
     except Exception as e:
         print("[FATAL ERROR] Exception:", e, file=sys.stderr)
         # We tried to create or validate but failed in python, not libpar2
-        d["bs1_par2_error"] = "2"
+        d["bs"+s+"_par2_error"] = "2"
     line = json.dumps(d).encode("utf-8")
     sys.stdout.buffer.write(line + b"\n")

@@ -41,9 +41,6 @@ headers = [
     "bs1_comp_iter_error",
     "bs1_comp_iterations",
     "bs1_comp_last_checked",
-    "bs1_comp_sha256",
-    "bs1_comp_sha256_error",
-    "bs1_comp_sha256_last_checked",
     "bs1_compression_type",
     "bs1_is_compressed",
     "bs1_par2_error",
@@ -65,6 +62,9 @@ headers = [
     "bs2_comp_iter_error",
     "bs2_comp_iterations",
     "bs2_comp_last_checked",
+    "bs2_comp_sha256",
+    "bs2_comp_sha256_error",
+    "bs2_comp_sha256_last_checked",
     "bs2_compression_type",
     "bs2_is_compressed",
     "bs2_par2_error",
@@ -85,7 +85,7 @@ headers = [
 part_number = 0
 line_count = 0
 max_lines_per_file = 10000
-output_file_name = f"D:/t/part{part_number:03}.ppjson"
+output_file_name = sys.argv[1] + f"{part_number:03}.ppjson"
 output_file = open(output_file_name, "wb")
 
 while True:
@@ -103,7 +103,7 @@ while True:
         # No try here because let's fail hard if we can't copy.
         output_file.close()
         part_number += 1
-        output_file_name = f"D:/t/part{part_number:03}.ppjson"
+        output_file_name = sys.argv[1] + f"{part_number:03}.ppjson"
         output_file = open(output_file_name, "wb")
         line_count = 0
 
