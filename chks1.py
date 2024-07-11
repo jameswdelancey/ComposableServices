@@ -14,6 +14,7 @@ magic_numbers = {
 
 
 first_file = True
+stale_before = (dt.datetime.now()-dt.timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
 
 while True:
     line = sys.stdin.buffer.readline()
@@ -23,7 +24,8 @@ while True:
     try:
         path = d["s1_local_path"] + "/" + d["b_path"]
         exists = True if d["bs1_sha256_error"] == "0" else False
-        if exists:
+        sha256_stale = True if d["bs1_sha256_last_checked"] < stale_before else False
+        if exists and sha256_stale:
             # Don't know if the file is compressed, how many times, how it's compressed
             # each time, or which SHA matches.
             ba_0 = bytearray(8192)
