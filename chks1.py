@@ -13,7 +13,6 @@ magic_numbers = {
 }
 
 
-first_file = True
 stale_before = (dt.datetime.now()-dt.timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
 
 while True:
@@ -45,21 +44,6 @@ while True:
                         if any(ba_0.startswith(m) for m in magic):
                             comp_type_0 = fmt
                             break
-                    if first_file:
-                        if not comp_type_0:
-                            print(
-                                "I assert that the first file should be found compressed",
-                                file=sys.stderr,
-                            )
-                            sys.exit(1)
-                        if comp_type_0 != "gz":
-                            print(
-                                "I assert that the first file should be gz",
-                                file=sys.stderr,
-                            )
-                            sys.exit(1)
-                        first_file = not first_file
-
                     ## Iteration 1 - Let's only check this case and the ones that are not, we will
                     ## Fix in Jupyter notebook. Same for compression that is not done with gz.
                     if comp_type_0 == "gz":

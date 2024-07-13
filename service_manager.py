@@ -32,6 +32,13 @@
 # Date: 2024-07-05
 # --------------------------------------------------------------------------------
 
+# Todo:
+# - Replace the threads design by piping the pipelines together with a binary
+#   that will keep the stdin buffer drained so that the stdout of an upstream
+#   process will not stop waiting with a full buffer. Or one that prevents a
+#   start until the stdin is closed from the upstream binary, like for timing
+#   IO like pulling from the same drive.
+
 import os
 import signal
 import subprocess
