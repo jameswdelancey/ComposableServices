@@ -1,6 +1,5 @@
 import sys
 
-
 while True:
     line = sys.stdin.buffer.readline()
     if not line:

@@ -1,5 +1,5 @@
-import sys
 import json
+import sys
 
 headers = sys.stdin.buffer.readline().decode("utf-8").rstrip("\r\n").split("\t")
 

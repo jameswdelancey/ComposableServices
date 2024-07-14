@@ -1,6 +1,5 @@
 import sys
 
-
 with open("D:/jsonlonly.log", "w") as f:
     i = 0
     while True:

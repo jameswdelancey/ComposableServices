@@ -19,13 +19,6 @@ for root, dirs, files in os.walk(base_path):
         root = root.replace("\\", "/")
         full_file_path = os.path.join(root, file).replace("\\", "/")
         stat = os.stat(full_file_path)
-        # sha_obj_0 = hashlib.sha256()
-        # with open(full_file_path, 'rb') as f:
-        # while True:
-        #  ba_len_0 = f.readinto(ba_0)
-        #  if not ba_len_0:
-        #   break
-        #  sha_obj_0.update(mv_0[:ba_len_0])
         # Create info dictionary for current file
         d = {
             "f_short_file_name": file,

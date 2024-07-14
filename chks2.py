@@ -1,9 +1,9 @@
 import ctypes
-from ctypes import c_int, POINTER, c_char_p
 import datetime as dt
 import json
 import os
 import sys
+from ctypes import POINTER, c_char_p, c_int
 
 errors = {
     0: "Success.",

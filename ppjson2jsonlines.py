@@ -1,7 +1,6 @@
 import json
 import sys
 
-
 while True:
     acc = []
     while True:

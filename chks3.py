@@ -1,8 +1,8 @@
 import datetime as dt
+import hashlib
 import json
 import os
 import sys
-import hashlib
 import zlib
 
 magic_numbers = {
@@ -14,7 +14,7 @@ magic_numbers = {
 
 
 first_file = True
-stale_before = (dt.datetime.now()-dt.timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
+stale_before = (dt.datetime.now() - dt.timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
 s = sys.argv[1]
 
 while True:
@@ -23,9 +23,11 @@ while True:
         break
     d = json.loads(line.decode("utf-8"))
     try:
-        path = d["s"+s+"_local_path"] + "/" + d["b_path"]
-        exists = True if d["bs"+s+"_sha256_error"] == "0" else False
-        sha256_stale = True if d["bs"+s+"_sha256_last_checked"] < stale_before else False
+        path = d["s" + s + "_local_path"] + "/" + d["b_path"]
+        exists = True if d["bs" + s + "_sha256_error"] == "0" else False
+        sha256_stale = (
+            True if d["bs" + s + "_sha256_last_checked"] < stale_before else False
+        )
         if exists and sha256_stale:
             # Don't know if the file is compressed, how many times, how it's compressed
             # each time, or which SHA matches.
@@ -83,56 +85,58 @@ while True:
             sha256_match_uncompressed = d["b_sha256"] == sha256_0
             sha256_0.encode()
             if sha256_match_uncompressed:
-                d["bs"+s+"_sha256_error"] = "0"
-                d["bs"+s+"_sha256_last_checked"] = dt.datetime.now().strftime(
+                d["bs" + s + "_sha256_error"] = "0"
+                d["bs" + s + "_sha256_last_checked"] = dt.datetime.now().strftime(
                     "%Y-%m-%d %H:%M:%S"
                 )
-                d["bs"+s+"_comp_sha256"] = ""
-                d["bs"+s+"_comp_sha256_error"] = "0"
-                d["bs"+s+"_comp_sha256_last_checked"] = ""
-                d["bs"+s+"_comp_iterations"] = "0"
-                d["bs"+s+"_comp_iter_error"] = "0"
-                d["bs"+s+"_updated_at"] = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                d["bs"+s+"_comp_last_checked"] = dt.datetime.now().strftime(
+                d["bs" + s + "_comp_sha256"] = ""
+                d["bs" + s + "_comp_sha256_error"] = "0"
+                d["bs" + s + "_comp_sha256_last_checked"] = ""
+                d["bs" + s + "_comp_iterations"] = "0"
+                d["bs" + s + "_comp_iter_error"] = "0"
+                d["bs" + s + "_updated_at"] = dt.datetime.now().strftime(
                     "%Y-%m-%d %H:%M:%S"
                 )
-                d["bs"+s+"_is_compressed"] = "0"
-                d["bs"+s+"_compression_type"] = ""
+                d["bs" + s + "_comp_last_checked"] = dt.datetime.now().strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+                d["bs" + s + "_is_compressed"] = "0"
+                d["bs" + s + "_compression_type"] = ""
 
             else:
                 sha256_match_compressed = (
                     comp_type_0 == "gz" and d["b_sha256"] == sha256_1
                 )
                 if sha256_match_compressed:
-                    d["bs"+s+"_sha256_error"] = "0"
-                    d["bs"+s+"_sha256_last_checked"] = dt.datetime.now().strftime(
+                    d["bs" + s + "_sha256_error"] = "0"
+                    d["bs" + s + "_sha256_last_checked"] = dt.datetime.now().strftime(
                         "%Y-%m-%d %H:%M:%S"
                     )
-                    d["bs"+s+"_comp_sha256"] = sha256_0
-                    d["bs"+s+"_comp_sha256_error"] = "0"
-                    d["bs"+s+"_comp_sha256_last_checked"] = dt.datetime.now().strftime(
+                    d["bs" + s + "_comp_sha256"] = sha256_0
+                    d["bs" + s + "_comp_sha256_error"] = "0"
+                    d["bs" + s + "_comp_sha256_last_checked"] = (
+                        dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    )
+                    d["bs" + s + "_comp_iterations"] = "1"
+                    d["bs" + s + "_comp_iter_error"] = "0"
+                    d["bs" + s + "_updated_at"] = dt.datetime.now().strftime(
                         "%Y-%m-%d %H:%M:%S"
                     )
-                    d["bs"+s+"_comp_iterations"] = "1"
-                    d["bs"+s+"_comp_iter_error"] = "0"
-                    d["bs"+s+"_updated_at"] = dt.datetime.now().strftime(
+                    d["bs" + s + "_comp_last_checked"] = dt.datetime.now().strftime(
                         "%Y-%m-%d %H:%M:%S"
                     )
-                    d["bs"+s+"_comp_last_checked"] = dt.datetime.now().strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    )
-                    d["bs"+s+"_is_compressed"] = "1"
-                    d["bs"+s+"_compression_type"] = "gz"
+                    d["bs" + s + "_is_compressed"] = "1"
+                    d["bs" + s + "_compression_type"] = "gz"
                 else:
-                    d["bs"+s+"_comp_sha256"] = ""
-                    d["bs"+s+"_comp_sha256_error"] = "2"
-                    d["bs"+s+"_comp_sha256_last_checked"] = ""
-                    d["bs"+s+"_sha256_error"] = "2"
+                    d["bs" + s + "_comp_sha256"] = ""
+                    d["bs" + s + "_comp_sha256_error"] = "2"
+                    d["bs" + s + "_comp_sha256_last_checked"] = ""
+                    d["bs" + s + "_sha256_error"] = "2"
     except Exception as e:
         print("[FATAL ERROR]:", e, file=sys.stderr)
-        d["bs"+s+"_comp_sha256"] = ""
-        d["bs"+s+"_comp_sha256_error"] = "2"
-        d["bs"+s+"_comp_sha256_last_checked"] = ""
-        d["bs"+s+"_sha256_error"] = "2"
+        d["bs" + s + "_comp_sha256"] = ""
+        d["bs" + s + "_comp_sha256_error"] = "2"
+        d["bs" + s + "_comp_sha256_last_checked"] = ""
+        d["bs" + s + "_sha256_error"] = "2"
     line = json.dumps(d).encode("utf-8")
     sys.stdout.buffer.write(line + b"\n")

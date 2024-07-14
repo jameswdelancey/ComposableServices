@@ -1,8 +1,8 @@
 import datetime as dt
+import hashlib
 import json
 import os
 import sys
-import hashlib
 import zlib
 
 magic_numbers = {
@@ -13,7 +13,7 @@ magic_numbers = {
 }
 
 
-stale_before = (dt.datetime.now()-dt.timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
+stale_before = (dt.datetime.now() - dt.timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
 
 while True:
     line = sys.stdin.buffer.readline()
