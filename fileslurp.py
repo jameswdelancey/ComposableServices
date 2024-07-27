@@ -32,13 +32,13 @@ for root, dirs, files in os.walk(base_path):
             "f_modified": dt.datetime.fromtimestamp(stat.st_mtime).strftime(
                 "%Y-%m-%d %H:%M:%S"
             ),
-            "f_is_deleted": 0,
-            "b_size": stat.st_size,
-            "b_is_deleted": 0,
-            "b_record_error_code": 0,
+            "f_is_deleted": "0",
+            "b_size": str(stat.st_size),
+            "b_is_deleted": "0",
+            "b_record_error_code": "0",
             "d_legacy_path": root,
-            "d_is_deleted": 0,
-            "d_record_error_code": 0,
+            "d_is_deleted": "0",
+            "d_record_error_code": "0",
         }
         line = json.dumps(d).encode("utf-8")
         sys.stdout.buffer.write(line + b"\n")

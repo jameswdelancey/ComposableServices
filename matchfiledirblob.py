@@ -130,13 +130,14 @@ s2headers = [
     "s2_local_path",
 ]
 
-glob_argument_pattern = "E:/new_file_storage/data/part*"  # sys.argv[1]
+glob_argument_pattern = "E:/new_file_storage/data-working-copy/part*"  # sys.argv[1]
 
-unsorted_files_to_cat_to_cat = [
-    x.replace("\\", "/") for x in glob.glob(glob_argument_pattern)
-]
-
-sorted_files_to_cat = sorted(unsorted_files_to_cat_to_cat)
+unsorted_files_to_cat = [x.replace("\\", "/") for x in glob.glob(glob_argument_pattern)]
+if not unsorted_files_to_cat:
+    print(
+        "[FATAL ERROR] Could not find the DB files in the glob pattern", file=sys.stderr
+    )
+sorted_files_to_cat = sorted(unsorted_files_to_cat)
 
 # Ascertain whether this is a better algo to move to the cat program
 db_file_records = []
@@ -194,8 +195,20 @@ for db_file_record in db_file_records:
             ): {header: db_file_record[header] for header in fheaders}
         }
     )
-    s_indexed.update({db_file_record["s1_local_path"]: None})
-    s_indexed.update({db_file_record["s2_local_path"]: None})
+    s_indexed.update(
+        {
+            db_file_record["s1_local_path"]: {
+                header: db_file_record[header] for header in s1headers
+            }
+        }
+    )
+    s_indexed.update(
+        {
+            db_file_record["s2_local_path"]: {
+                header: db_file_record[header] for header in s2headers
+            }
+        }
+    )
 
 next_dir_id = max([int(x["d_id"]) for x in directories_indexed.values()]) + 1
 next_file_id = max([int(x["f_id"]) for x in files_indexed.values()]) + 1
@@ -259,14 +272,14 @@ while True:
             if forced_new_records:
                 # Only check new IDs
                 record["d_parent_directory_id"] = directories_created_ids.get(
-                    os.path.dirname(record["d_legacy_path"]), 0
+                    os.path.dirname(record["d_legacy_path"]), "0"
                 )
             else:
                 # Check existing IDs first, then new IDs
                 record["d_parent_directory_id"] = directories_indexed.get(
                     os.path.dirname(record["d_legacy_path"])
                 ) or directories_created_ids.get(
-                    os.path.dirname(record["d_legacy_path"]), 0
+                    os.path.dirname(record["d_legacy_path"]), "0"
                 )
 
             # stage: cleanup
@@ -326,9 +339,15 @@ while True:
             now_str = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             record["b_created_at"] = now_str
             record["b_updated_at"] = now_str
-            # record["b_path",
+            record["b_path"] = (
+                record["b_sha256"][0:2]
+                + "/"
+                + record["b_sha256"][2:4]
+                + "/"
+                + record["b_sha256"][4:]
+            )
             full_file_path = record["d_legacy_path"] + "/" + record["f_short_file_name"]
-            record["b_mime_type"] = mimetypes.guess_type(full_file_path)[0]
+            record["b_mime_type"] = mimetypes.guess_type(full_file_path)[0] or ""
             # record["b_size",
             # record["b_sha256",
             # record["b_is_deleted",
@@ -403,7 +422,7 @@ while True:
         maybe_new_files_match = files_created_ids.get(
             (record["d_legacy_path"], record["f_short_file_name"], record["b_sha256"])
         )
-        if maybe_new_dir_match:
+        if maybe_new_files_match:
             record.update(maybe_file_match)
         elif maybe_file_match and not forced_new_records:
             record.update(maybe_file_match)
@@ -440,7 +459,7 @@ while True:
             ] = next_dir_id
 
     except Exception as e:
-        print("[FATAL ERROR] matchfiledirblob.py:", e, file=sys.stderr)
+        print("[FATAL ERROR] matchfiledirblob.py:", repr(e), file=sys.stderr)
         record["bs1_comp_sha256"] = ""
         sys.exit(1)
     line = json.dumps(record).encode("utf-8")

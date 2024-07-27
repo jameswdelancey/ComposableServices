@@ -49,13 +49,15 @@ bs2headers = [
 ]
 
 
-if len(sys.argv) != 2:
+if len(sys.argv) != 3:
     print(
-        "Usage: python copy1to2.py <yes_origin_to_s1|no_origin_to_s1>", file=sys.stderr
+        "Usage: python copy1to2.py <yes_origin_to_s1|no_origin_to_s1> <yes_s1_to_s2|no>",
+        file=sys.stderr,
     )
     sys.exit(1)
 
 yes_origin_to_s1 = True if sys.argv[1] == "yes_origin_to_s1" else False
+yes_s1_to_s2 = True if sys.argv[2] == "yes_s1_to_s2" else False
 
 # Assumes s2_local_path is set for the correct destination
 # Assumes that chk for sha256 and par2 will subsequently run
@@ -67,7 +69,7 @@ while True:
         break
     d = json.loads(line.decode("utf-8"))
     try:
-        if yes_origin_to_s1 and not d["bs1_blob_id"]:
+        if yes_origin_to_s1:
             origin_path = d["d_legacy_path"] + "/" + d["f_short_file_name"]
             dst_path = d["s1_local_path"] + "/" + d["b_path"]
             exists = os.path.exists(origin_path)
@@ -82,14 +84,14 @@ while True:
                         if not num_bytes_read:
                             break
                         dst_file.write(view[:num_bytes_read])
-
-        path = d["s1_local_path"] + "/" + d["b_path"]
-        exists = True if d["bs1_sha256_error"] == "0" else False
-        needs_copy = d["bs1_sha256_error"] == "0" and d["bs2_sha256_error"] != "0"
-        if exists and needs_copy:
-            src = path
-            dest = d["s2_local_path"] + "/" + d["b_path"]
-            shutil.copy2(src, dest)
+        if yes_s1_to_s2:
+            path = d["s1_local_path"] + "/" + d["b_path"]
+            exists = True if d["bs1_sha256_error"] == "0" else False
+            needs_copy = d["bs1_sha256_error"] == "0" and d["bs2_sha256_error"] != "0"
+            if exists and needs_copy:
+                src = path
+                dest = d["s2_local_path"] + "/" + d["b_path"]
+                shutil.copy2(src, dest)
     except Exception as e:
         print("[FATAL ERROR]:", e, file=sys.stderr)
         # d["bs1_comp_sha256"] = ""
