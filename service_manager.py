@@ -39,14 +39,13 @@
 #   start until the stdin is closed from the upstream binary, like for timing
 #   IO like pulling from the same drive.
 
-import os
 import signal
 import subprocess
 import sys
 import threading
 import time
 from types import FrameType
-from typing import List, Optional, TypeVar
+from typing import List, Optional
 
 __version__ = 0.1
 

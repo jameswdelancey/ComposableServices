@@ -6,7 +6,6 @@
 # "d_legacy_path": "C:/Users/Administrator/Desktop/py2hy-master/py2hy-master/tools",
 # "d_is_deleted": 0, "d_record_error_code": 0}
 import datetime as dt
-import hashlib
 import json
 import os
 import sys

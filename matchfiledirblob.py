@@ -12,13 +12,10 @@
 # traversal, and given the assumption of order, reach the same output.
 import datetime as dt
 import glob
-import hashlib
 import json
 import mimetypes
 import os
-import shutil
 import sys
-from typing import Protocol, cast
 
 if len(sys.argv) != 4:
     print(

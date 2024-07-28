@@ -1,7 +1,6 @@
 import datetime as dt
 import hashlib
 import json
-import os
 import sys
 import zlib
 

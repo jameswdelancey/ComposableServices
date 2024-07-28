@@ -4,24 +4,13 @@ on: [push, pull_request]
 
 jobs:
  format:
-   runs-on: windows-latest
+  runs-on: ubuntu-latest
 
-   steps:
-   - uses: actions/checkout@v3
-   
-   - name: Install MSYS2
-     uses: msys2/setup-msys2@v2
-     with:
-       update: true
-       install: >-
-         python
-         python-pip
-       path-type: inherit
-
-   - name: Install Black
-     shell: msys2 {0}
-     run: pip install black
-     
-   - name: Check Python files format
-     shell: msys2 {0}
-     run: python -m black --check .
+  steps:
+  - uses: actions/checkout@v4
+  
+  - name: Install Black
+    run: pip install black
+    
+  - name: Check Python files format
+    run: python -m black --check .
