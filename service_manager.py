@@ -41,6 +41,7 @@
 #   IO like pulling from the same drive.
 
 import json
+import os
 import subprocess
 import sys
 from typing import List
@@ -104,52 +105,58 @@ for command_pipeline in service:
     command_pipeline.append(0)
 
 while not_stopping:
-    for command_pipeline in service:
-        if command_pipeline[-1] is not False:
-            print(f"[INFO] starting {command_pipeline=}", file=sys.stderr)
-            for i, command in enumerate(list(command_pipeline[:-2])):
-                p = subprocess.Popen(
-                    command,
-                    stdin=p0.stdout if i != 0 else None,
-                    stdout=subprocess.PIPE if i + 1 != len(command_pipeline) else None,
-                )
-                command_pipeline[-2].append(p)
-                if i != 0:
-                    p0.stdout.close()
-                p0 = p
-                if i + 1 == len(command_pipeline) - 2:
-                    command_pipeline[-1] = False
-        try:
-            time_to_kill = False
-            for p in command_pipeline[-2]:
-                try:
-                    p.wait(timeout=5)
-                    print(f"[WARN] return code {p=}", file=sys.stderr)
-                    time_to_kill = True
-                except subprocess.TimeoutExpired:
-                    pass
-            if time_to_kill:
-                command_pipeline[-2][0].kill()
-            command_pipeline[-1] = p0.communicate(timeout=15)
-            p = command_pipeline[-2].pop(0) if command_pipeline[-2] else None
-            while p:
-                p.wait()
-                p = command_pipeline[-2].pop(0) if command_pipeline[-2] else None
-            (
-                print(f"[DEBUG] return code {command_pipeline=}", file=sys.stderr)
-                if debug
-                else None
-            )
-        except subprocess.TimeoutExpired:
-            (
-                print(f"[DEBUG] still running {command_pipeline=}", file=sys.stderr)
-                if debug
-                else None
-            )
-        except BaseException as e:
-            print(f"[WARN] Unhandled exception {e!r}. Closing.", file=sys.stderr)
-            not_stopping = False
-            break
+    try:
+        for command_pipeline in service:
+            # Check if any are waitable, dead
+            if command_pipeline[-2]:
+                for p in command_pipeline[-2]:
+                    try:
+                        p.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        pass
+            # Has started but one or more bin is waited
+            if command_pipeline[-2] and list(
+                filter(lambda x: x.returncode, command_pipeline[-2])
+            ):
+                for p in command_pipeline[-2]:
+                    # Time to kill
+                    if p.returncode is None and os.name == "nt":
+                        subprocess.run(["taskkill", "/F", "/PID", str(p.pid)])
+                    if p.returncode is None and os.name != "nt":
+                        p.kill()
+                    if p.returncode is None:
+                        try:
+                            p.wait(timeout=15)
+                        except subprocess.TimeoutExpired:
+                            print(
+                                f"[FATAL] We should be waiting a killed process but it's hung. Crash.\n{p=}",
+                                file=sys.stderr,
+                            )
+                            sys.exit(1)
+                # Reset to not started
+                command_pipeline[-2] = []
+                command_pipeline[-1] = 0
+            # Start the unstarted
+            if command_pipeline[-1] is not False:  # False means started
+                print(f"[INFO] starting {command_pipeline=}", file=sys.stderr)
+                for i, command in enumerate(list(command_pipeline[:-2])):
+                    p = subprocess.Popen(
+                        command,
+                        stdin=p0.stdout if i != 0 else None,
+                        stdout=(
+                            subprocess.PIPE if i + 1 != len(command_pipeline) else None
+                        ),
+                    )
+                    command_pipeline[-2].append(p)
+                    if i != 0:
+                        p0.stdout.close()
+                    p0 = p
+                    if i + 1 == len(command_pipeline) - 2:
+                        command_pipeline[-1] = False
+    except BaseException as e:
+        print(f"[WARN] Unhandled exception {e!r}. Closing.", file=sys.stderr)
+        not_stopping = False
+        break
 
 
 print("[INFO] All processes have been stopped.", file=sys.stderr)
