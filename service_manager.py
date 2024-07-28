@@ -30,6 +30,7 @@
 #
 # Author: James Delancey.
 # Date: 2024-07-05
+# Version 0.2: Removes use of threads
 # --------------------------------------------------------------------------------
 
 # Todo:
@@ -39,71 +40,21 @@
 #   start until the stdin is closed from the upstream binary, like for timing
 #   IO like pulling from the same drive.
 
-import signal
+import json
 import subprocess
 import sys
-import threading
-import time
-from types import FrameType
-from typing import List, Optional
+from typing import List
 
-__version__ = 0.1
+__version__ = 0.2
 
 Command = List[str]
 CommandPipeline = List[Command]
 Service = List[CommandPipeline]
 
-running: bool = True
 
-
-def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
-    global running
-    print("INFO: Signal Received. Stopping threads...")
-    running = False
-
-
-signal.signal(signal.SIGINT, signal_handler)
-
-
-def run_command_pipeline(command_pipeline: CommandPipeline) -> None:
-    global running
-    while running:  # Restarts unless fast restarts
-        start = time.time()
-        try:
-            for i, command in enumerate(command_pipeline):
-                if i == 0:
-                    processes = [
-                        subprocess.Popen(command_pipeline[0], stdout=subprocess.PIPE)
-                    ]
-                elif i != len(command_pipeline) - 1:
-                    processes.append(
-                        subprocess.Popen(
-                            command, stdin=processes[-1].stdout, stdout=subprocess.PIPE
-                        )
-                    )
-                else:
-                    processes.append(
-                        subprocess.Popen(command, stdin=processes[-1].stdout)
-                    )
-            while running:  # Wakes to check running between communicate
-                try:
-                    processes[-1].communicate(timeout=5)
-                    assert (
-                        processes[-1].returncode == 0
-                    ), f"Return code of {command_pipeline[-1]} is not 0"
-                except subprocess.TimeoutExpired:
-                    pass
-        except Exception as e:
-            if time.time() - start < 1 * 60:
-                print(f"FATAL ERROR: {e!r}", file=sys.stderr)
-                break
-            print(f"NON FATAL ERROR: {e}", file=sys.stderr)
-    running = False
-
-
-if len(sys.argv) != 2:
+if len(sys.argv) != 2 and len(sys.argv) != 3:  # debug is optional
     print(
-        "Usage: python service_manager.py <config_filepath>\n  config_filepath     Path for config file for service. Default: service.cfg"
+        "Usage: python service_manager.py <config_filepath> [-d]\n  config_filepath     Path for config file for service. Default: service.cfg"
     )
     sys.exit(1)
 
@@ -119,29 +70,86 @@ service: Service = []
 
 for line in config_text_lines:
     line = line.strip()
-    if not line:
-        continue
-    if len(line) >= 3 and line[0:3] == "###":
-        command_pipeline.append(command) if command else None
+    if not line or line.split()[0] == "#":
+        pass
+    elif line.split()[0] == "##":
+        if command:
+            command_pipeline.append(command)
+        if command_pipeline:
+            service.append(command_pipeline)
         command = []
-        continue
-    if len(line) >= 2 and line[0:2] == "##":
-        service.append(command_pipeline) if command_pipeline else None
         command_pipeline = []
-        continue
-    if line[0] != "#":
+    elif line.split()[0] == "###":
+        if command:
+            command_pipeline.append(command)
+        command = []
+    else:
         command.append(line)
 
-command_pipeline.append(command) if command else None
-service.append(command_pipeline) if command_pipeline else None
+if command:
+    command_pipeline.append(command)
+if command_pipeline:
+    service.append(command_pipeline)
 
-threads = []
+debug = True if "-d" in sys.argv else False
+(
+    print(f"[DEBUG] starting {json.dumps(service, indent=4)}", file=sys.stderr)
+    if debug
+    else None
+)
+not_stopping = True
+
 for command_pipeline in service:
-    thread = threading.Thread(target=run_command_pipeline, args=(command_pipeline,))
-    threads.append(thread)
-    thread.start()
+    command_pipeline.append([])
+    command_pipeline.append(0)
 
-for thread in threads:
-    thread.join()
+while not_stopping:
+    for command_pipeline in service:
+        if command_pipeline[-1] is not False:
+            print(f"[INFO] starting {command_pipeline=}", file=sys.stderr)
+            for i, command in enumerate(list(command_pipeline[:-2])):
+                p = subprocess.Popen(
+                    command,
+                    stdin=p0.stdout if i != 0 else None,
+                    stdout=subprocess.PIPE if i + 1 != len(command_pipeline) else None,
+                )
+                command_pipeline[-2].append(p)
+                if i != 0:
+                    p0.stdout.close()
+                p0 = p
+                if i + 1 == len(command_pipeline) - 2:
+                    command_pipeline[-1] = False
+        try:
+            time_to_kill = False
+            for p in command_pipeline[-2]:
+                try:
+                    p.wait(timeout=5)
+                    print(f"[WARN] return code {p=}", file=sys.stderr)
+                    time_to_kill = True
+                except subprocess.TimeoutExpired:
+                    pass
+            if time_to_kill:
+                command_pipeline[-2][0].kill()
+            command_pipeline[-1] = p0.communicate(timeout=15)
+            p = command_pipeline[-2].pop(0) if command_pipeline[-2] else None
+            while p:
+                p.wait()
+                p = command_pipeline[-2].pop(0) if command_pipeline[-2] else None
+            (
+                print(f"[DEBUG] return code {command_pipeline=}", file=sys.stderr)
+                if debug
+                else None
+            )
+        except subprocess.TimeoutExpired:
+            (
+                print(f"[DEBUG] still running {command_pipeline=}", file=sys.stderr)
+                if debug
+                else None
+            )
+        except BaseException as e:
+            print(f"[WARN] Unhandled exception {e!r}. Closing.", file=sys.stderr)
+            not_stopping = False
+            break
 
-print("INFO: All threads have been stopped.", file=sys.stderr)
+
+print("[INFO] All processes have been stopped.", file=sys.stderr)

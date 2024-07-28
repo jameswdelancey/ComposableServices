@@ -107,7 +107,7 @@ df_list2 = None
 for node in data:
     # Initialize an empty list to hold temporary DataFrames
     df_list = []
-    
+
     # Iterate through each key and its corresponding values in the current node's dictionary
     for key, values in data[node].items():
         # Skip processing if the key contains certain strings
@@ -117,7 +117,7 @@ for node in data:
             continue
         if "files" in key:
             continue
-        
+
         # Create a DataFrame from the values with specified column names
         temp_df = pd.DataFrame(values, columns=["datetime", "status"])
         # Add a new column 'type' with the key as its value
@@ -136,11 +136,11 @@ for node in data:
         temp_df["datetime"] = pd.to_datetime(temp_df["datetime"])
         # Append the temporary DataFrame to the list of DataFrames
         df_list.append(temp_df)
-    
+
     # Skip the rest of the loop if the list of DataFrames is empty
     if not df_list:
         continue
-    
+
     # Concatenate all DataFrames in the list, pivot the resulting DataFrame
     # to have 'datetime' as index and 'type' as columns, then resample by 1 hour
     # and calculate the mean of 'status' values
@@ -150,7 +150,7 @@ for node in data:
         .resample("1h")
         .mean()
     )
-    
+
     # Merge the current DataFrame 'df' with the final DataFrame 'df_list2'
     # If 'df_list2' is not None, merge them using their indexes and add a suffix to
     # the column names from the current node, otherwise set 'df_list2' to the current 'df'

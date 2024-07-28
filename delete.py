@@ -52,7 +52,7 @@ while True:
             os.unlink(fn) if not dryrun else print(fn)
             fn = sorted_files.pop(0)
             i += 1
-    except IndexError:
+    except (IndexError, FileNotFoundError):
         try:
             os.unlink(cache_path)
         except FileNotFoundError:
