@@ -1,3 +1,6 @@
+# Curious if this is leaking memory some how. In Windows I saw an upstream ffmpeg process
+# emitting into this which was taking an enormous amount of memory. Need to test
+# closing this to make sure it stops the upstream services.
 import datetime as dt
 import os
 import sys

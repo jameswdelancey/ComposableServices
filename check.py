@@ -1,3 +1,6 @@
+# Origionally I thought that if this closed, it would close the rest of the pipe, but not so
+# at least in Windows. I need to find a way to not rely on ffmpeg taking the 'q' through stdin
+# as that has lead to the pipeline getting stuck open without another watchdog.
 import os
 import sys
 import time
