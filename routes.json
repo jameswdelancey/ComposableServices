@@ -1,0 +1,10 @@
+{
+    "/": "index",
+    "/bootstrap-1.1.1.min.css": "file_bootstrap",
+    "/jquery-1.5.2.min.js": "file_jquery",
+    "/menu": "menu",
+	"/page/cam-drive": "cam_drive",
+	"/page/latest-files": "latest_files",
+	"/page/": "index2",
+    "/page/contact": "contact"
+}
