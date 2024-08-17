@@ -44,18 +44,19 @@ import json
 import os
 import subprocess
 import sys
+import time
 from typing import List
 
-__version__ = 0.2
+__version__ = 0.3
 
 Command = List[str]
 CommandPipeline = List[Command]
 Service = List[CommandPipeline]
 
 
-if len(sys.argv) != 2 and len(sys.argv) != 3:  # debug is optional
+if len(sys.argv) != 2:
     print(
-        "Usage: python service_manager.py <config_filepath> [-d]\n  config_filepath     Path for config file for service. Default: service.cfg"
+        "Usage: python service_manager.py <config_filepath>\n  config_filepath     Path for config file for service. Default: service.cfg"
     )
     sys.exit(1)
 
@@ -92,71 +93,27 @@ if command:
 if command_pipeline:
     service.append(command_pipeline)
 
-debug = True if "-d" in sys.argv else False
-(
-    print(f"[DEBUG] starting {json.dumps(service, indent=4)}", file=sys.stderr)
-    if debug
-    else None
-)
-not_stopping = True
+process_array = [None] * len(service)
 
-for command_pipeline in service:
-    command_pipeline.append([])
-    command_pipeline.append(0)
-
-while not_stopping:
-    try:
-        for command_pipeline in service:
-            # Check if any are waitable, dead
-            if command_pipeline[-2]:
-                for p in command_pipeline[-2]:
-                    try:
-                        p.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        pass
-            # Has started but one or more bin is waited
-            if command_pipeline[-2] and list(
-                filter(lambda x: x.returncode, command_pipeline[-2])
-            ):
-                for p in command_pipeline[-2]:
-                    # Time to kill
-                    if p.returncode is None and os.name == "nt":
-                        subprocess.run(["taskkill", "/F", "/PID", str(p.pid)])
-                    if p.returncode is None and os.name != "nt":
-                        p.kill()
-                    if p.returncode is None:
-                        try:
-                            p.wait(timeout=15)
-                        except subprocess.TimeoutExpired:
-                            print(
-                                f"[FATAL] We should be waiting a killed process but it's hung. Crash.\n{p=}",
-                                file=sys.stderr,
-                            )
-                            sys.exit(1)
-                # Reset to not started
-                command_pipeline[-2] = []
-                command_pipeline[-1] = 0
-            # Start the unstarted
-            if command_pipeline[-1] is not False:  # False means started
-                print(f"[INFO] starting {command_pipeline=}", file=sys.stderr)
-                for i, command in enumerate(list(command_pipeline[:-2])):
-                    p = subprocess.Popen(
-                        command,
-                        stdin=p0.stdout if i != 0 else None,
-                        stdout=(
-                            subprocess.PIPE if i + 1 != len(command_pipeline) else None
-                        ),
-                    )
-                    command_pipeline[-2].append(p)
-                    if i != 0:
-                        p0.stdout.close()
-                    p0 = p
-                    if i + 1 == len(command_pipeline) - 2:
-                        command_pipeline[-1] = False
-    except BaseException as e:
-        print(f"[WARN] Unhandled exception {e!r}. Closing.", file=sys.stderr)
-        not_stopping = False
-        break
-
+while True:
+    for j, command_pipeline in enumerate(service):
+        if process_array[j] is None:  # first start
+            print(f"[INFO] starting {command_pipeline=}", file=sys.stderr)
+            for i, command in enumerate(command_pipeline):
+                process_array[j] = subprocess.Popen(
+                    command,
+                    stdin=p0.stdout if i != 0 else None,
+                    stdout=(
+                        subprocess.PIPE if i + 1 != len(command_pipeline) else None
+                    ),
+                )
+                p0 = process_array[j]
+        else:
+            try:
+                process_array[j].wait(timeout=5)
+                process_array[j] = None
+            except subprocess.TimeoutExpired:
+                pass
+    time.sleep(15)
 
 print("[INFO] All processes have been stopped.", file=sys.stderr)

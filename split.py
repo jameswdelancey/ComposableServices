@@ -12,14 +12,14 @@ class SupportsReadInto(Protocol):
 
 
 # arg parse
-if len(sys.argv) != 4:
+if len(sys.argv) != 3:
     print(
         "split.py -- Takes stdin and splits it every 15 min into floored quarter-hour chunks and periodically touches a file\nUsage: python split.py <outdirname> <outbasenametmpl> <touchfile>"
     )
     sys.exit(1)
 g_strOutdirname = sys.argv[1]
 g_strOutbasenametmpl = sys.argv[2]
-g_strTouchfile = sys.argv[3]
+# g_strTouchfile = sys.argv[3]
 if not os.path.exists(g_strOutdirname):
     print(
         f"FATAL ERROR: <outdirname> '{g_strOutdirname}' does not exist", file=sys.stderr
@@ -35,9 +35,9 @@ except ValueError:
     sys.exit(1)
 
 # init loop
-f2 = open(g_strTouchfile, "w")
-f2.write(" ")
-f2.close()
+# f2 = open(g_strTouchfile, "w")
+# f2.write(" ")
+# f2.close()
 g_cBuf = bytearray(8192)
 g_mvcBuf = memoryview(g_cBuf)
 tmp_dt = dt.datetime.now()
@@ -65,8 +65,8 @@ while True:
             g_hOutFile.close()
             g_strOutbasename = localoutbasename
             g_hOutFile = open(f"{g_strOutdirname}/{g_strOutbasename}", "ab")
-            f2 = open(g_strTouchfile, "w")
-            f2.write("")
-            f2.close()
+            # f2 = open(g_strTouchfile, "w")
+            # f2.write("")
+            # f2.close()
     g_hOutFile.write(g_mvcBuf[:size])
 g_hOutFile.close()
