@@ -1,6 +1,6 @@
-import sys
 import shlex
 import subprocess
+import sys
 import time
 
 if len(sys.argv) != 3:

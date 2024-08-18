@@ -5,6 +5,16 @@
     "/menu": "menu",
 	"/page/cam-drive": "cam_drive",
 	"/page/latest-files": "latest_files",
+	"/page/latest-images": "latest_images",
+	"/page/ping": "ping",
 	"/page/": "index2",
-    "/page/contact": "contact"
+    "/page/contact": "contact",
+    "/img/ts_cam0.jpg": "ts_cam0",
+    "/img/ts_cam1.jpg": "ts_cam1",
+    "/img/ts_cam2.jpg": "ts_cam2",
+    "/img/ts_cam3.jpg": "ts_cam3",
+    "/img/ts_cam4.jpg": "ts_cam4",
+    "/img/ts_cam5.jpg": "ts_cam5",
+    "/img/ts_cam6.jpg": "ts_cam6",
+    "/img/ts_cam7.jpg": "ts_cam7"
 }

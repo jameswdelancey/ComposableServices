@@ -1,4 +1,5 @@
-import subprocess, json
+import json
+import subprocess
 
 
 def index():
@@ -29,38 +30,38 @@ window.onload = function() {
 function loadMenu() {
     makeRequest('/menu', function(menuItems) {
         var menu = document.getElementById('menu');
-		menu.innerHTML = ''; // Clear existing menu items
-		var topbarWrapper = document.createElement('div');
-		topbarWrapper.className = 'topbar-wrapper';
-		topbarWrapper.style.zIndex = '5';
+        menu.innerHTML = ''; // Clear existing menu items
+        var topbarWrapper = document.createElement('div');
+        topbarWrapper.className = 'topbar-wrapper';
+        topbarWrapper.style.zIndex = '5';
         
-		var topbar = document.createElement('div');
-		topbar.className = 'topbar';
+        var topbar = document.createElement('div');
+        topbar.className = 'topbar';
 
-		var fill = document.createElement('div');
-		fill.className = 'fill';
+        var fill = document.createElement('div');
+        fill.className = 'fill';
 
-		var container = document.createElement('div');
-		container.style = 'margin-left:10px;margin-right:10px;';
-		container.className = 'container';
-		
-		var h3 = document.createElement('h3');
-		var projectLink = document.createElement('a');
-		projectLink.href = '#';
-		projectLink.textContent = 'Project Name';
-		h3.appendChild(projectLink);
+        var container = document.createElement('div');
+        container.style = 'margin-left:10px;margin-right:10px;';
+        container.className = 'container';
+        
+        var h3 = document.createElement('h3');
+        var projectLink = document.createElement('a');
+        projectLink.href = '#';
+        projectLink.textContent = 'Project Name';
+        h3.appendChild(projectLink);
 
-		var ul = document.createElement('ul');
-		
-		container.appendChild(h3);
-		container.appendChild(ul);
-		fill.appendChild(container);
-		topbar.appendChild(fill);
-		topbarWrapper.appendChild(topbar);
-		menu.appendChild(topbarWrapper);
+        var ul = document.createElement('ul');
+        
+        container.appendChild(h3);
+        container.appendChild(ul);
+        fill.appendChild(container);
+        topbar.appendChild(fill);
+        topbarWrapper.appendChild(topbar);
+        menu.appendChild(topbarWrapper);
 
-		for (var key in menuItems) {
-			var menuItem = document.createElement('li');
+        for (var key in menuItems) {
+            var menuItem = document.createElement('li');
             var link = document.createElement('a');
             link.href = '#' + key;
             link.textContent = menuItems[key];
@@ -151,8 +152,10 @@ def menu():
 {
     "": "Home",
     "contact": "Contact",
-	"cam-drive": "Cam Drive",
-	"latest-files": "Latest Files"
+    "cam-drive": "Cam Drive",
+    "latest-files": "Latest Files",
+    "latest-images": "Latest Images",
+    "ping": "TCP Pings"
 }""",
     )
 
@@ -245,3 +248,117 @@ def latest_files():
             + b"</pre>",
         )
     return "text/html", 200, b"<h1>Latest Files per Camera</h1><pre>" + ret + b"</pre>"
+
+
+def ping():
+    try:  # Convert this try/except to a decorator
+        ret = subprocess.check_output(
+            ["python", "tcppinger.py"],
+            input="\n".join(
+                json.dumps(x)
+                for x in [
+                    {"tcpping_10.0.0.242": ""},
+                    {"tcpping_10.0.0.243": ""},
+                    {"tcpping_10.0.0.244": ""},
+                    {"tcpping_10.0.0.245": ""},
+                    {"tcpping_10.0.0.246": ""},
+                    {"tcpping_10.0.0.240": ""},
+                    {"tcpping_10.0.0.241": ""},
+                    {"tcpping_10.0.0.247": ""},
+                ]
+            ).encode("utf-8"),
+        )
+    except Exception as e:
+        return (
+            "text/html",
+            200,
+            b"<h1>Latest Files per Camera</h1><pre>Error: "
+            + str(e).encode("utf-8")
+            + b"</pre>",
+        )
+    return "text/html", 200, b"<h1>Latest Files per Camera</h1><pre>" + ret + b"</pre>"
+
+
+def latest_images():
+    try:  # Convert this try/except to a decorator
+        ret = subprocess.check_output(
+            ["python", "ts2jpg.py"],
+            input="\n".join(
+                json.dumps(x)
+                for x in [
+                    {"ts2jpg|D:/ts_cam0|D:/ts_cam0.jpg": ""},
+                    {"ts2jpg|D:/ts_cam1|D:/ts_cam1.jpg": ""},
+                    {"ts2jpg|D:/ts_cam2|D:/ts_cam2.jpg": ""},
+                    {"ts2jpg|D:/ts_cam3|D:/ts_cam3.jpg": ""},
+                    {"ts2jpg|D:/ts_cam4|D:/ts_cam4.jpg": ""},
+                    {"ts2jpg|D:/ts_cam5|D:/ts_cam5.jpg": ""},
+                    {"ts2jpg|D:/ts_cam6|D:/ts_cam6.jpg": ""},
+                    {"ts2jpg|D:/ts_cam7|D:/ts_cam7.jpg": ""},
+                ]
+            ).encode("utf-8"),
+        )
+    except Exception as e:
+        return (
+            "text/html",
+            200,
+            b"<h1>Latest Files per Camera</h1><pre>Error: "
+            + str(e).encode("utf-8")
+            + b"</pre>",
+        )
+    output = b"<h1>Latest Files per Camera</h1><pre>" + ret + b"</pre>"
+    for i in [
+        {"ts2jpg|D:/ts_cam0|D:/ts_cam0.jpg": ""},
+        {"ts2jpg|D:/ts_cam1|D:/ts_cam1.jpg": ""},
+        {"ts2jpg|D:/ts_cam2|D:/ts_cam2.jpg": ""},
+        {"ts2jpg|D:/ts_cam3|D:/ts_cam3.jpg": ""},
+        {"ts2jpg|D:/ts_cam4|D:/ts_cam4.jpg": ""},
+        {"ts2jpg|D:/ts_cam5|D:/ts_cam5.jpg": ""},
+        {"ts2jpg|D:/ts_cam6|D:/ts_cam6.jpg": ""},
+        {"ts2jpg|D:/ts_cam7|D:/ts_cam7.jpg": ""},
+    ]:
+        for k in i:
+            if k.startswith("ts2jpg"):
+                output += f'<img src="{k.rsplit("|")[-1].replace("D:/", "/img/")}" width="800">'.encode(
+                    "utf-8"
+                )
+    return "text/html", 200, output
+
+
+def ts_cam0():
+    with open("D:/ts_cam0.jpg", "rb") as f:
+        return "image/jpeg", 200, f.read()
+
+
+def ts_cam1():
+    with open("D:/ts_cam1.jpg", "rb") as f:
+        return "image/jpeg", 200, f.read()
+
+
+def ts_cam2():
+    with open("D:/ts_cam2.jpg", "rb") as f:
+        return "image/jpeg", 200, f.read()
+
+
+def ts_cam3():
+    with open("D:/ts_cam3.jpg", "rb") as f:
+        return "image/jpeg", 200, f.read()
+
+
+def ts_cam4():
+    with open("D:/ts_cam4.jpg", "rb") as f:
+        return "image/jpeg", 200, f.read()
+
+
+def ts_cam5():
+    with open("D:/ts_cam5.jpg", "rb") as f:
+        return "image/jpeg", 200, f.read()
+
+
+def ts_cam6():
+    with open("D:/ts_cam6.jpg", "rb") as f:
+        return "image/jpeg", 200, f.read()
+
+
+def ts_cam7():
+    with open("D:/ts_cam7.jpg", "rb") as f:
+        return "image/jpeg", 200, f.read()

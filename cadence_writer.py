@@ -1,5 +1,5 @@
-import sys
 import datetime as dt
+import sys
 
 date_str = dt.datetime.now().strftime("%Y-%m-%d")
 filename = f"D:/log/{date_str}.txt"

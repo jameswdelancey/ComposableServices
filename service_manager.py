@@ -40,8 +40,6 @@
 #   start until the stdin is closed from the upstream binary, like for timing
 #   IO like pulling from the same drive.
 
-import json
-import os
 import subprocess
 import sys
 import time
@@ -102,6 +100,7 @@ while True:
             for i, command in enumerate(command_pipeline):
                 process_array[j] = subprocess.Popen(
                     command,
+                    # noqa: F821 undefined name 'p0' - Conditional protects this
                     stdin=p0.stdout if i != 0 else None,
                     stdout=(
                         subprocess.PIPE if i + 1 != len(command_pipeline) else None
