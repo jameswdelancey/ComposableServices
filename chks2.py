@@ -22,6 +22,10 @@ libpar2 = ctypes.CDLL("./libpar2.dll")
 libpar2.par2cmdline.argtypes = [c_int, POINTER(c_char_p)]
 libpar2.par2cmdline.restype = c_int
 
+if "--only-check" in sys.argv:
+    cnt_create = 0
+    cnt_validate = 0
+
 while True:
     line = sys.stdin.buffer.readline()
     if not line:
@@ -35,6 +39,10 @@ while True:
         par2_exists = True if os.path.exists(par2_path) else False
         if base_exists:
             if not par2_exists and not current_sha256_error:  # Then create
+                if "--only-check" in sys.argv:
+                    cnt_create += 1
+                    continue
+
                 cmds = [b"c", b"-q", b"-q", base_path.encode("utf-8")]
                 argc = len(cmds)
                 argv = (c_char_p * argc)(*cmds)
@@ -60,6 +68,9 @@ while True:
                         "%Y-%m-%d %H:%M:%S"
                     )
             else:  # par2 exists, then validate
+                if "--only-check" in sys.argv:
+                    cnt_validate += 1
+                    continue
                 cmds = [b"v", b"-q", b"-q", base_path.encode("utf-8")]
                 argc = len(cmds)
                 argv = (c_char_p * argc)(*cmds)
@@ -88,5 +99,12 @@ while True:
         print("[FATAL ERROR] Exception:", e, file=sys.stderr)
         # We tried to create or validate but failed in python, not libpar2
         d["bs1_par2_error"] = "2"
+    if "--only-check" in sys.argv:
+        continue
+
     line = json.dumps(d).encode("utf-8")
     sys.stdout.buffer.write(line + b"\n")
+
+if "--only-check" in sys.argv:
+    print("to create:", cnt_create)
+    print("to validate:", cnt_validate)

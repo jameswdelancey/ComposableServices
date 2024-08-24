@@ -155,7 +155,9 @@ def menu():
     "cam-drive": "Cam Drive",
     "latest-files": "Latest Files",
     "latest-images": "Latest Images",
-    "ping": "TCP Pings"
+    "ping": "TCP Pings",
+    "fs_stats": "FileStorage Stats",
+    "fs_stats2": "FileStorage Stats 2"
 }""",
     )
 
@@ -362,3 +364,92 @@ def ts_cam6():
 def ts_cam7():
     with open("D:/ts_cam7.jpg", "rb") as f:
         return "image/jpeg", 200, f.read()
+
+
+def fs_stats():
+    ret = subprocess.check_output(
+        "python cat.py E:/new_file_storage/data-source-tree/part* | \
+python ppjson2jsonlines.py | \
+C:\\msys64\\usr\\bin\\wc -l",
+        shell=True,
+    ).strip()
+    ret2 = subprocess.check_output(
+        "python cat.py E:/new_file_storage/data-working-copy/part* | \
+python ppjson2jsonlines.py | \
+C:\\msys64\\usr\\bin\\wc -l",
+        shell=True,
+    ).strip()
+    dpatches = (
+        subprocess.check_output(
+            "dir E:\\new_file_storage\\data-source-tree-patches | C:\\msys64\\usr\\bin\\grep gz",
+            shell=True,
+        )
+        .strip()
+        .replace(b"\r\n", b"\n")
+    )
+    fpatches = (
+        subprocess.check_output(
+            "dir E:\\new_file_storage\\file-storage-dir-tree-patch | C:\\msys64\\usr\\bin\\grep gz",
+            shell=True,
+        )
+        .strip()
+        .replace(b"\r\n", b"\n")
+    )
+    ret3 = subprocess.check_output(
+        "python cat.py E:/new_file_storage/file-storage-dir-tree/bs* | \
+C:\\msys64\\usr\\bin\\wc -l",
+        shell=True,
+    ).strip()
+    ret4 = subprocess.check_output(
+        "python cat.py E:/new_file_storage/file-storage-working-dir/bs* | \
+C:\\msys64\\usr\\bin\\wc -l",
+        shell=True,
+    ).strip()
+
+    return (
+        "text/html",
+        200,
+        b"<h1>File Storage Stats</h1><pre>Lines:\n\ndata-source-tree:"
+        + ret
+        + b"\ndata-working-copy:"
+        + ret2
+        + b"\nfile-storage-dir-tree:"
+        + ret3
+        + b"\nfile-storage-working-dir:"
+        + ret4
+        + b"\npatches on data / data-source-tree-patches:\n"
+        + dpatches
+        + b"\n\npatches on file listings / file-storage-dir-tree-patch:\n"
+        + fpatches
+        + b"\n</pre>",
+    )
+
+
+def fs_stats2():
+    ret5 = subprocess.check_output(
+        "python cat.py E:/new_file_storage/data-source-tree/part* | \
+python ppjson2jsonlines.py | \
+python sed.py | \
+python exists.py | \
+python chks1.py --only-check",
+        shell=True,
+    ).strip()
+    ret6 = subprocess.check_output(
+        "python cat.py E:/new_file_storage/data-source-tree/part* | \
+python ppjson2jsonlines.py | \
+python sed.py | \
+python exists.py | \
+python chks2.py --only-check",
+        shell=True,
+    ).strip()
+
+    return (
+        "text/html",
+        200,
+        b"<h1>File Storage Stats 2</h1><pre>Lines:"
+        + b"\nnumber of files that need a sha256 check on bsl1:"
+        + ret5
+        + b"\nnumber of files that need a par2 create or validate bsl1:"
+        + ret6
+        + b"\n</pre>",
+    )

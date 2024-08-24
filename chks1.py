@@ -14,6 +14,9 @@ magic_numbers = {
 
 stale_before = (dt.datetime.now() - dt.timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
 
+if "--only-check" in sys.argv:
+    cnt = 0
+
 while True:
     line = sys.stdin.buffer.readline()
     if not line:
@@ -24,6 +27,9 @@ while True:
         exists = True if d["bs1_sha256_error"] == "0" else False
         sha256_stale = True if d["bs1_sha256_last_checked"] < stale_before else False
         if exists and sha256_stale:
+            if "--only-check" in sys.argv:
+                cnt += 1
+                continue
             # Don't know if the file is compressed, how many times, how it's compressed
             # each time, or which SHA matches.
             ba_0 = bytearray(8192)
@@ -116,5 +122,11 @@ while True:
         d["bs1_comp_sha256_error"] = "2"
         d["bs1_comp_sha256_last_checked"] = ""
         d["bs1_sha256_error"] = "2"
+    if "--only-check" in sys.argv:
+        continue
+
     line = json.dumps(d).encode("utf-8")
     sys.stdout.buffer.write(line + b"\n")
+
+if "--only-check" in sys.argv:
+    print(cnt)

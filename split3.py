@@ -88,7 +88,7 @@ headers = [
 part_number = 0
 line_count = 0
 max_lines_per_file = 10000
-output_file_name = f"D:/t/part{part_number:03}.ppjson"
+output_file_name = f"D:/t2/part{part_number:03}.ppjson"
 output_file = open(output_file_name, "wb")
 
 while True:
@@ -106,7 +106,7 @@ while True:
         # No try here because let's fail hard if we can't copy.
         output_file.close()
         part_number += 1
-        output_file_name = f"D:/t/part{part_number:03}.ppjson"
+        output_file_name = f"D:/t2/part{part_number:03}.ppjson"
         output_file = open(output_file_name, "wb")
         line_count = 0
 

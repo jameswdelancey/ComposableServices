@@ -52,13 +52,14 @@ CommandPipeline = List[Command]
 Service = List[CommandPipeline]
 
 
-if len(sys.argv) != 2:
+if len(sys.argv) != 2 and len(sys.argv) != 3:
     print(
         "Usage: python service_manager.py <config_filepath>\n  config_filepath     Path for config file for service. Default: service.cfg"
     )
     sys.exit(1)
 
 config_filepath = sys.argv[1]
+times_to_run = int(sys.argv[2]) if len(sys.argv) == 3 else 0
 
 with open(config_filepath) as f:
     config_text_lines = f.read().strip().splitlines()
@@ -92,8 +93,9 @@ if command_pipeline:
     service.append(command_pipeline)
 
 process_array = [None] * len(service)
-
-while True:
+RUN = True
+times_ran = 0
+while RUN:
     for j, command_pipeline in enumerate(service):
         if process_array[j] is None:  # first start
             print(f"[INFO] starting {command_pipeline=}", file=sys.stderr)
@@ -111,6 +113,9 @@ while True:
             try:
                 process_array[j].wait(timeout=5)
                 process_array[j] = None
+                times_ran += 1
+                if times_to_run == times_ran:
+                    RUN = False
             except subprocess.TimeoutExpired:
                 pass
     time.sleep(15)

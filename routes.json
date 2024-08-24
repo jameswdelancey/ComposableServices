@@ -3,6 +3,8 @@
     "/bootstrap-1.1.1.min.css": "file_bootstrap",
     "/jquery-1.5.2.min.js": "file_jquery",
     "/menu": "menu",
+	"/page/fs_stats": "fs_stats",
+	"/page/fs_stats2": "fs_stats2",
 	"/page/cam-drive": "cam_drive",
 	"/page/latest-files": "latest_files",
 	"/page/latest-images": "latest_images",
